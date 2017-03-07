@@ -105,7 +105,7 @@ NSString *const kGCMMessageIDKey = @"gcm.message_id";
 
 // [START message_handling]
 // Receive displayed notifications for iOS 10 devices.
-#if defined(__IPHONE_10_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
+//#if defined(__IPHONE_10_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
 // Handle incoming notification messages while app is in the foreground.
 - (void)userNotificationCenter:(UNUserNotificationCenter *)center
        willPresentNotification:(UNNotification *)notification
@@ -158,7 +158,7 @@ didReceiveNotificationResponse:(UNNotificationResponse *)response
     
     completionHandler();
 }
-#else
+//#else
 // [START receive_message in background iOS < 10]
 - (void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo {
     NSLog(@"Message ID: %@", userInfo[@"gcm.message_id"]);
@@ -210,7 +210,7 @@ fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler
     completionHandler(UIBackgroundFetchResultNoData);
 }
 // [END receive_message iOS < 10]
-#endif
+//#endif
 // [END message_handling]
 
 
