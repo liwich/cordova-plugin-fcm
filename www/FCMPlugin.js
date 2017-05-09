@@ -21,6 +21,10 @@ FCMPlugin.prototype.onNotification = function( callback, success, error ){
 FCMPlugin.prototype.hasPermission = function( success, error ){
 	exec(success, error, "FCMPlugin", 'hasPermission',[]);
 }
+// HAS PERMISSION //
+FCMPlugin.prototype.promptForPermission = function( success, error ){
+	exec(success, error, "FCMPlugin", 'promptForPermission',[]);
+}
 // TOKEN REFRESH CALLBACK //
 FCMPlugin.prototype.onTokenRefresh = function( callback ){
 	FCMPlugin.prototype.onTokenRefreshReceived = callback;
