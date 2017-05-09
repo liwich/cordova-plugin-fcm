@@ -20,7 +20,7 @@ static NSString *tokenRefreshCallback = @"FCMPlugin.onTokenRefreshReceived";
 static FCMPlugin *fcmPluginInstance;
 
 + (FCMPlugin *) fcmPlugin {
-    
+
     return fcmPluginInstance;
 }
 
@@ -29,16 +29,16 @@ static FCMPlugin *fcmPluginInstance;
     NSLog(@"Cordova view ready");
     fcmPluginInstance = self;
     [self.commandDelegate runInBackground:^{
-        
+
         CDVPluginResult* pluginResult = nil;
         pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
         [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
     }];
-    
+
 }
 
 // GET TOKEN //
-- (void) getToken:(CDVInvokedUrlCommand *)command 
+- (void) getToken:(CDVInvokedUrlCommand *)command
 {
     NSLog(@"get Token");
     [self.commandDelegate runInBackground:^{
@@ -49,8 +49,71 @@ static FCMPlugin *fcmPluginInstance;
     }];
 }
 
+/**
+ * If the app has the permission to show push notifications.
+ */
+- (void)hasPermission:(CDVInvokedUrlCommand *)command
+{
+    NSLog(@"Has permission");
+    [self.commandDelegate runInBackground:^{
+        CDVPluginResult* result;
+        BOOL hasPermission = [self hasPermissionUserNotifications];
+
+        result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK
+                                     messageAsBool:hasPermission];
+
+        [self.commandDelegate sendPluginResult:result
+                                    callbackId:command.callbackId];
+    }];
+}
+
+/**
+ * Ask for permission to show notifications.
+ *
+ * @param callback
+ *      The function to be exec as the callback
+ */
+- (void) promptForPermission:(CDVInvokedUrlCommand *)command
+{
+    if (IsAtLeastiOSVersion(@"8.0")) {
+        UIUserNotificationType types;
+        UIUserNotificationSettings *settings;
+
+        types = UIUserNotificationTypeAlert|UIUserNotificationTypeBadge|UIUserNotificationTypeSound;
+
+        settings = [UIUserNotificationSettings settingsForTypes:types
+                                                     categories:nil];
+
+        [self.commandDelegate runInBackground:^{
+            [[UIApplication sharedApplication]
+             registerUserNotificationSettings:settings];
+        }];
+    }
+}
+
+/**
+ * If the app has the permission to show push notifications.
+ */
+- (BOOL) hasPermissionUserNotifications
+{
+  BOOL enabled = NO;
+
+  // Checking if app is running iOS 8
+  if ([application respondsToSelector:@selector(registerUserNotificationSettings:)]) {
+    enabled = application.currentUserNotificationSettings.types != UIUserNotificationTypeNone;
+  } else {
+    // app is running on iOS7
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+        enabled = application.enabledRemoteNotificationTypes != UIRemoteNotificationTypeNone;
+    #pragma GCC diagnostic pop
+  }
+
+  return enabled;
+}
+
 // UN/SUBSCRIBE TOPIC //
-- (void) subscribeToTopic:(CDVInvokedUrlCommand *)command 
+- (void) subscribeToTopic:(CDVInvokedUrlCommand *)command
 {
     NSString* topic = [command.arguments objectAtIndex:0];
     NSLog(@"subscribe To Topic %@", topic);
@@ -62,7 +125,7 @@ static FCMPlugin *fcmPluginInstance;
     }];
 }
 
-- (void) unsubscribeFromTopic:(CDVInvokedUrlCommand *)command 
+- (void) unsubscribeFromTopic:(CDVInvokedUrlCommand *)command
 {
     NSString* topic = [command.arguments objectAtIndex:0];
     NSLog(@"unsubscribe From Topic %@", topic);
@@ -77,13 +140,13 @@ static FCMPlugin *fcmPluginInstance;
 - (void) registerNotification:(CDVInvokedUrlCommand *)command
 {
     NSLog(@"view registered for notifications");
-    
+
     notificatorReceptorReady = YES;
     NSData* lastPush = [AppDelegate getLastPush];
     if (lastPush != nil) {
         [FCMPlugin.fcmPlugin notifyOfMessage:lastPush];
     }
-    
+
     CDVPluginResult* pluginResult = nil;
     pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
@@ -94,7 +157,7 @@ static FCMPlugin *fcmPluginInstance;
     NSString *JSONString = [[NSString alloc] initWithBytes:[payload bytes] length:[payload length] encoding:NSUTF8StringEncoding];
     NSString * notifyJS = [NSString stringWithFormat:@"%@(%@);", notificationCallback, JSONString];
     NSLog(@"stringByEvaluatingJavaScriptFromString %@", notifyJS);
-    
+
     if ([self.webView respondsToSelector:@selector(stringByEvaluatingJavaScriptFromString:)]) {
         [(UIWebView *)self.webView stringByEvaluatingJavaScriptFromString:notifyJS];
     } else {
@@ -106,7 +169,7 @@ static FCMPlugin *fcmPluginInstance;
 {
     NSString * notifyJS = [NSString stringWithFormat:@"%@('%@');", tokenRefreshCallback, token];
     NSLog(@"stringByEvaluatingJavaScriptFromString %@", notifyJS);
-    
+
     if ([self.webView respondsToSelector:@selector(stringByEvaluatingJavaScriptFromString:)]) {
         [(UIWebView *)self.webView stringByEvaluatingJavaScriptFromString:notifyJS];
     } else {
